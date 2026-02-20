@@ -1,179 +1,282 @@
-# PROCESS
+# Validation Formats
 
-This document describes the standard development workflow for this
-repository. The goal is simple:
+This repository follows strict formatting rules so workflow compliance
+can be automatically verified.
 
-> Every change should be traceable from code → commit → pull request →
-> issue → discussion.
+If a change does not match these formats, it is considered **non-compliant**
+even if the code itself works.
 
-------------------------------------------------------------------------
+---
 
-## Daily Use (Normal Development)
+## Issue Format
 
-All normal development should go through **gdd**.\
-You typically should **not manually create branches or pull requests**.
+Every unit of work begins with an issue.
 
-### Start Work
+### Issue Title
 
-Run:
+Format:
 
-    gdd
+```
+<type>: <short description>
+```
 
-You will be prompted to select or create an issue.
+Allowed types:
 
-`gdd` will automatically: - create a correctly named feature branch -
-push the branch - open a pull request linked to the issue
-
-------------------------------------------------------------------------
-
-### Work on the Feature
-
-Edit code normally.
-
-When saving progress:
-
-    git add .
-    git commit
-
-A commit helper will prompt you for a Conventional Commit message.
-
-Then push:
-
-    git push
-
-------------------------------------------------------------------------
-
-### Continuous Integration
-
-After pushing: - CI automatically builds the kernel - Boot/tests run
-automatically - Status checks appear on the pull request
-
-You do **not** need to manually run CI.
-
-------------------------------------------------------------------------
-
-### Merge
-
-When: - required checks pass - review is satisfied
-
-Auto-merge will merge the PR and close the linked issue.
-
-Because this repository uses **squash merging**, the **PR title becomes
-the final commit message**.
-
-------------------------------------------------------------------------
-
-## Workflow Overview
-
-    issue → feature branch → commits → PR → CI → review → squash merge → issue closes
-
-------------------------------------------------------------------------
-
-## Commits
-
-Commit messages follow the **Conventional Commits** format:
-
-    type(scope): message
+```
+feat
+fix
+refactor
+docs
+chore
+test
+ci
+perf
+build
+```
 
 Examples:
 
-    feat(memory): implement page allocator
-    fix(boot): correct grub timeout
-    refactor(pmm): simplify free list structure
-    docs(paging): document virtual memory layout
+```
+feat: add page frame allocator
+fix: kernel panic on boot
+docs: document memory layout
+refactor: simplify scheduler structure
+```
 
-Commit messages are generated using the commit helper when running:
+### Issue Body
 
-    git commit
+The issue must contain the following sections:
 
-Do not manually write commit messages unless necessary.
+```
+## Problem
+What is wrong or missing?
 
-------------------------------------------------------------------------
+## Proposed Change
+What will be done?
 
-## Pull Requests
+## Notes (optional)
+Extra context, debugging observations, or design thoughts.
+```
 
-All changes must go through a pull request.
+---
 
-Requirements: - Every PR must reference an issue using
-`Closes #<issue number>` - PR title must be a Conventional Commit - PR
-template must be completed - Required CI checks must pass before merge
+## Branch Naming Format
 
-The PR template is located at:
+Branch names are derived from the issue number.
 
-    .github/pull_request_template.md
+Format:
 
-------------------------------------------------------------------------
+```
+<type>/<issue-number>-<kebab-case-description>
+```
 
-## Feature Branch Naming
+Rules:
 
-Feature branches must follow this naming convention:
+* lowercase only
+* words separated by hyphens
+* no spaces
+* no underscores
 
-    feat/123-page-allocator
-    fix/77-grub-timeout
-    chore/210-ci-cleanup
-    docs/54-memory-map-notes
-    refactor/88-pmm-structure
+Examples:
 
-Branch names correspond to the issue number.
+```
+feat/123-page-allocator
+fix/77-grub-timeout
+docs/54-memory-map
+refactor/88-pmm-cleanup
+```
 
-------------------------------------------------------------------------
+Regex definition:
 
-## Branch Roles
+```
+^(feat|fix|docs|refactor|chore|test|ci|perf|build)\/[0-9]+-[a-z0-9-]+$
+```
 
--   **dev** --- active development integration branch
--   **main** --- stable integration branch
--   **stable** --- release-ready code
+---
 
-Direct pushes are not allowed to these branches.
+## Commit Message Format
 
-All work enters through pull requests only.
+All commits must follow **Conventional Commits**.
 
-------------------------------------------------------------------------
+Format:
 
-## Branch Protections
+```
+type(scope): message
+```
 
-Organization-wide rules are defined in:
+Rules:
 
-    general-policy.json
+* type must be from the allowed list
+* scope must describe the subsystem
+* message must be imperative ("add", not "added")
 
-Protections include: - no force pushes - required status checks -
-required workflows (CI + testing) - CodeFactor quality check
+Allowed types:
 
-**Merge is blocked unless required status checks pass on the pull
-request.**
+```
+feat
+fix
+refactor
+docs
+chore
+test
+ci
+perf
+build
+```
 
-------------------------------------------------------------------------
+Examples:
 
-## Merge Policy
+```
+feat(memory): implement page allocator
+fix(boot): correct multiboot header alignment
+docs(paging): add virtual memory diagram
+refactor(pmm): remove duplicate free logic
+```
 
-This project uses **squash merging only** to maintain a clean history.
+Regex:
 
-Auto-merge is enabled when: - all required checks pass - requirements
-are satisfied
+```
+^(feat|fix|refactor|docs|chore|test|ci|perf|build)\([a-z0-9_-]+\): [a-z].+$
+```
 
-The PR title becomes the final commit on the target branch.
+---
 
-------------------------------------------------------------------------
+## Pull Request Format
 
-## About gdd
+The pull request is the **canonical record** of the change.
 
-`gdd` automates project bookkeeping and setup.
+### PR Title
 
-It: - creates or links an issue - creates the correctly named branch -
-pushes the branch - opens a pull request with `Closes #<issue>` -
-optionally enables auto-merge - prints useful links and next steps
+Must be a valid Conventional Commit.
 
-The intent is that contributors spend time writing code, not managing
-GitHub paperwork.
+Example:
 
-------------------------------------------------------------------------
+```
+feat(memory): implement page allocator
+```
 
-## Why This Exists
+This becomes the final commit after squash merge.
 
-Kernel development has very little runtime observability.\
-The Git history serves as the primary debugging record.
+---
 
-This workflow ensures: - every change has context - every decision is
-recoverable - future debugging is possible - contributors can understand
-why code exists
+### PR Body Requirements
 
+The PR body must include:
+
+```
+Closes #<issue-number>
+```
+
+Example:
+
+```
+Closes #123
+```
+
+Regex:
+
+```
+Closes #[0-9]+
+```
+
+---
+
+### Required PR Sections
+
+The PR template must be completed and include:
+
+```
+## Summary
+What this change does.
+
+## Changes
+Key implementation details.
+
+## Testing
+How it was verified.
+```
+
+---
+
+## CI Requirements
+
+A compliant repository must have:
+
+```
+.github/workflows/ci.yml
+```
+
+The workflow must trigger on:
+
+```
+push
+pull_request
+```
+
+CI must succeed before merge.
+
+Required status checks must be attached to protected branches.
+
+---
+
+## Branch Protection Requirements
+
+The following branches must be protected:
+
+```
+dev
+main
+stable
+```
+
+Protections required:
+
+* pull request required before merge
+* at least 1 approval
+* required status checks enabled
+* force pushes disabled
+* branch deletion disabled
+
+---
+
+## Merge Requirements
+
+The repository must use:
+
+```
+squash merging only
+```
+
+Merge commits and rebase merges must be disabled.
+
+After merge:
+
+* issue closes automatically
+* PR title becomes final commit
+
+---
+
+## Compliance Definition
+
+A repository is **PROCESS compliant** if:
+
+1. Branch protections exist
+2. Required CI workflows exist
+3. PRs reference issues
+4. Branch names match format
+5. Commits match Conventional Commits
+6. PR titles are valid
+7. Required status checks pass
+
+Any violation means the repository does **not** follow the PROCESS workflow.
+
+---
+
+## Why this matters
+
+This document is not just guidance.
+
+It defines a **verifiable development protocol**.
+
+The repository history is treated as a debugging instrument.
+Correct form
